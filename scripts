@@ -1,0 +1,63 @@
+import sys
+import os
+sys.path.append('/home/sofia96/Downloads/trajactory-learning/script')
+
+#define several const integers
+from Myclass import const
+const.MAXEPX=10
+const.MAXEPY=20
+
+#open the file
+f=open("/home/sofia96/Downloads/trajactory-learning/traj1-l/2013122701001.traj","r")
+
+#get the(tno,state) dictionary
+CarObs_Dict={}
+Tno=0
+for line in f:
+	if line[0]=='t':
+		Tno=int(line[4:])
+		CarObs_Dict[Tno]=[]
+	else:
+		CarObs_Dict[Tno].append(line)
+
+#transverse string to list
+for key,val in CarObs_Dict.items():
+	tmplist=[]
+	for ele in val:
+		strlist=ele.split(",")
+		tmplist.append([float(i) for i in strlist])
+	CarObs_Dict[key]=tmplist
+
+#normalize the dict elements to have the same length
+#get the max and min of episode
+MinTime=0xffffffff
+MaxTime=0
+for val in CarObs_Dict.values():
+	for item in val:
+		if item[0]<MinTime:
+			MinTime=item[0]
+		if item[0]>MaxTime:
+			MaxTime=item[0]
+
+
+#get the max of epx and epy
+'''MaxX=0
+MaxY=0
+for val in CarObs_Dict.values():
+	for item in val:
+		if item[8]>MaxX:
+			MaxX=item[8]
+		if item[9]>MaxY:
+			MaxY=item[9]
+print(MaxX)
+print(MaxY)'''
+
+#complement the states and limit epx and epy to the limitation
+for val in CarObs_Dict.values():
+	velocity=val[0][12]
+	for index in range(int(MinTime),int(val[0][0])):
+		val.insert(0,[index,0,0,0,0,0,0,0,const.MAXEPX,const.MAXEPY,velocity])
+	for index in range(int(val[-1][0])+1,int(MaxTime)+1):
+		val.append([index,0,0,0,0,0,0,0,const.MAXEPX,const.MAXEPY,velocity])
+
+
