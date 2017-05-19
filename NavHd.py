@@ -2,6 +2,7 @@ import numpy as np
 import h5py
 import opt
 
+#time,yaw,x,y,speed
 #Save nav file to h5file
 def Save_nav_to_h5(array):
 	f=h5py.File("/home/sofia96/Downloads/trajactory-learning/h5/2013122701.h5","r+")
@@ -24,7 +25,7 @@ def Nav_normalize(filename,trajtimestamp,name):
 
 #extract items needed
 	EgoCarNavArray=np.array(EgoCarNavList)
-	EgoCarArray=np.vstack((EgoCarNavArray[:,0],EgoCarNavArray[:,3],EgoCarNavArray[:,4],EgoCarNavArray[:,5],EgoCarNavArray[:,7]))
+	EgoCarArray=np.vstack((EgoCarNavArray[:,0],EgoCarNavArray[:,3],EgoCarNavArray[:,4]%6.28,EgoCarNavArray[:,5],EgoCarNavArray[:,7]))
 	EgoCarArray=EgoCarArray.transpose()
 	EgoCarList=[]
 	for index in range(0,EgoCarArray.shape[0]):
@@ -50,7 +51,7 @@ def Nav_normalize(filename,trajtimestamp,name):
 
 	#resort EgocarObsList
 	SortedEgoCarObsList=sorted(EgoCarObsList,key=opt.first_ele)
-	#time,yaw,x,y,speed
+
 	#normalize positions
 	Globx=SortedEgoCarObsList[0][2]
 	Globy=SortedEgoCarObsList[0][3]
