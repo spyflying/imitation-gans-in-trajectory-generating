@@ -6,12 +6,12 @@ import opt
 import math
 import opt
 import NavHd
-sys.path.append('/home/sofia96/Downloads/trajactory-learning/script')
 
-#define several const integers
+sys.path.append('/home/sofia96/Downloads/trajactory-learning/script')
 from Myclass import const
-const.MAXEPX=10
-const.MAXEPY=20
+
+#time,x,y,yaw,velocity
+#define several const integers
 const.CARTRUNC=5
 
 def show_traj_in_files(filename,dic):
@@ -153,64 +153,59 @@ def Save_traj_to_h5(dic):
 	f.close()
 
 
-#initialize h5File and create two groups
-Traj=h5py.File("/home/sofia96/Downloads/trajactory-learning/h5/2013122701.h5","w")
-trajectory=Traj.create_group(".TRAJ")
-nav=Traj.create_group(".NAV")
+def Traj_handling(filename):
 
-#open the file
-Traj=open("/home/sofia96/Downloads/trajactory-learning/traj1-l/2013122701001.traj","r")
-NormedTraj=open("/home/sofia96/Downloads/trajactory-learning/Sampletest/2013122701001.traj","w")
-#get the(tno,state) dictionary
-CarObs_Dict={}
-Tno=0
-for line in Traj:
-	if line[0]=='t':
-		Tno=int(line[4:])
-		CarObs_Dict[Tno]=[]
-	else:
-		CarObs_Dict[Tno].append(line)
+	#open the file
+	Traj=open(filename,"r")
+	#get the(tno,state) dictionary
+	CarObs_Dict={}
+	Tno=0
+	for line in Traj:
+		if line[0]=='t':
+			Tno=int(line[4:])
+			CarObs_Dict[Tno]=[]
+		else:
+			CarObs_Dict[Tno].append(line)
 
-#transverse string to list
-for key,val in CarObs_Dict.items():
-	tmplist=[]
-	for ele in val:
-		strlist=ele.split(",")
-		tmplist.append([float(i) for i in strlist])
-	CarObs_Dict[key]=tmplist
+	#transverse string to list
+	for key,val in CarObs_Dict.items():
+		tmplist=[]
+		for ele in val:
+			strlist=ele.split(",")
+			tmplist.append([float(i) for i in strlist])
+		CarObs_Dict[key]=tmplist
 
-#extract features that we are interested
-for key,val in CarObs_Dict.items():
-	tmpvalue=[]
-	for item in val:
-		yaw=math.atan(item[10]) #radius,x/y
-		tmpvalue.append([item[0],item[8],item[9],yaw,item[12]])
-	CarObs_Dict[key]=tmpvalue
-#replace first ele with int
-for key,val in CarObs_Dict.items():
-	CarObs_Dict[key]=replace_float_to_int(val)
+	#extract features that we are interested
+	for key,val in CarObs_Dict.items():
+		tmpvalue=[]
+		for item in val:
+			yaw=math.atan(item[10]) #radius,x/y
+			tmpvalue.append([item[0],item[8],item[9],yaw,item[12]])
+		CarObs_Dict[key]=tmpvalue
+	#replace first ele with int
+	for key,val in CarObs_Dict.items():
+		CarObs_Dict[key]=replace_float_to_int(val)
 
-#normalize the dict elements to have the same length
-CarObs_Dict=Traj_normalize(CarObs_Dict)
+	#normalize the dict elements to have the same length
+	CarObs_Dict=Traj_normalize(CarObs_Dict)
 
-#get x distance mins 
-CarObs_AvDis_Dict={}
-for key,val in CarObs_Dict.items():
-	valarray=np.array(val)
-	thisDis=np.power(valarray[:,1],2)+np.power(valarray[:,2],2)
-	AvDis=thisDis.mean()
-	CarObs_AvDis_Dict[key]=AvDis
+	#get x distance mins 
+	CarObs_AvDis_Dict={}
+	for key,val in CarObs_Dict.items():
+		valarray=np.array(val)
+		thisDis=np.power(valarray[:,1],2)+np.power(valarray[:,2],2)
+		AvDis=thisDis.mean()
+		CarObs_AvDis_Dict[key]=AvDis
 
-#delete elements not need
-for index in range(0,const.CARTRUNC):
-	del CarObs_AvDis_Dict[getminkey(CarObs_AvDis_Dict)]
-for key in CarObs_AvDis_Dict:
-	del CarObs_Dict[key]
+	#delete elements not need
+	for index in range(0,const.CARTRUNC):
+		del CarObs_AvDis_Dict[getminkey(CarObs_AvDis_Dict)]
+	for key in CarObs_AvDis_Dict:
+		del CarObs_Dict[key]
 
-show_traj_in_files("show.txt",CarObs_Dict)
+	show_traj_in_files("show.txt",CarObs_Dict)
 
-#write to h5 file
-Save_traj_to_h5(CarObs_Dict)
+	#write to h5 file
+	Save_traj_to_h5(CarObs_Dict)
 
-NormedTraj.close()
-Traj.close()
+	Traj.close()
